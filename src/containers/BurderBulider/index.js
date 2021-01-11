@@ -49,6 +49,10 @@ class BurgerBulider extends Component {
     });
   };
 
+  purchaseContinueHandler = () => {
+    alert("You Continue");
+  };
+
   purchaseHandler = () => {
     this.setState((prevState, props) => {
       return {
@@ -62,7 +66,12 @@ class BurgerBulider extends Component {
     return (
       <Aux>
         <Modal show={this.state.purchasing} modalClosed={this.purchaseHandler}>
-          <OrederSummary ingredients={this.state.ingredients} />
+          <OrederSummary
+            price={this.state.totalPrice}
+            ingredients={this.state.ingredients}
+            purchaseCanceled={this.purchaseHandler}
+            purchaseContinued={this.purchaseContinueHandler}
+          />
         </Modal>
         <Burger ingredients={this.state.ingredients} />
         <Controls
