@@ -1,7 +1,9 @@
 import classes from "./Burger.module.css";
 import Ingredient from "components/Ingredient";
+import { withRouter } from "react-router-dom";
 
 const Burger = (props) => {
+  console.log(props);
   const ingredientsComponents = [];
   const transformedIngredients = Object.keys(props.ingredients);
   const noIgredients = <h1>No Ingredients</h1>;
@@ -25,4 +27,4 @@ const Burger = (props) => {
   );
 };
 
-export default Burger;
+export default withRouter(Burger);

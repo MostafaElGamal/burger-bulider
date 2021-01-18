@@ -59,27 +59,38 @@ class BurgerBulider extends Component {
   };
 
   purchaseContinueHandler = async () => {
-    this.setState({ loading: true, purchasing: false });
-    const order = {
-      ingredients: this.state.ingredients,
-      pirce: this.state.totalPrice,
-      customer: {
-        name: "Mustafa",
-        email: "testawy@testawy.com",
-        deliveryMethod: "fast",
-        address: {
-          street: "Giza",
-          zipCode: "121",
-          country: "Egypt",
-        },
-      },
-    };
-    try {
-      await axios.post("orders.json", order);
-      this.setState({ loading: false, purchasing: false });
-    } catch (error) {
-      console.log("[error] purchaseContinueHandler", error);
+    // this.setState({ loading: true, purchasing: false });
+    // const order = {
+    //   ingredients: this.state.ingredients,
+    //   pirce: this.state.totalPrice,
+    //   customer: {
+    //     name: "Mustafa",
+    //     email: "testawy@testawy.com",
+    //     deliveryMethod: "fast",
+    //     address: {
+    //       street: "Giza",
+    //       zipCode: "121",
+    //       country: "Egypt",
+    //     },
+    //   },
+    // };
+    // try {
+    //   await axios.post("orders.json", order);
+    //   this.setState({ loading: false, purchasing: false });
+    // } catch (error) {
+    //   console.log("[error] purchaseContinueHandler", error);
+    // }
+    const queryParams = [];
+    for (const i in this.state.ingredients) {
+      const key = encodeURIComponent(i);
+      const value = encodeURIComponent(this.state.ingredients[i]);
+      if (value) queryParams.push(`${key}=${value}`);
     }
+    const queryString = `?${queryParams.join("&")}`;
+    this.props.history.push({
+      pathname: "/checkout",
+      search: queryString,
+    });
   };
 
   purchaseHandler = () => {
