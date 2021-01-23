@@ -3,10 +3,8 @@ import Item from "components/Navigation/Item";
 
 const Items = (props) => (
   <ul className={classes.NavigationItems}>
-    <Item link="/" active>
-      Burger Bulider
-    </Item>
-    <Item>Checkout</Item>
+    <Item link="/">Burger Bulider</Item>
+    <Item link="/orders">Orders</Item>
   </ul>
 );
 
