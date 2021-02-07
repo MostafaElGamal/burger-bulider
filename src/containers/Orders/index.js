@@ -19,7 +19,7 @@ class Orders extends Component {
         fetchedOrders.push(newObject);
       }
     } catch (error) {
-      console.log(error);
+      console.log("[componentDidMount] orders.js", error);
     }
     this.setState({ loading: false, orders: fetchedOrders });
   }

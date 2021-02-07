@@ -5,15 +5,25 @@ import classes from "./contactData.module.css";
 import axios from "plugins/axiosOrders";
 import Input from "components/UI/Input";
 
-const createInputObject = ({ placeHolder, type, elementType, options }) => {
-  console.log(elementType);
+const createInputObject = ({
+  placeHolder,
+  type,
+  elementType,
+  options,
+  rules,
+}) => {
   return {
     value: "",
+    valid: false,
     elementType: elementType || "input",
     elementConfig: {
       type: type || "text",
       placeholder: placeHolder,
       options: options || null,
+    },
+    validation: {
+      required: true,
+      ...rules,
     },
   };
 };
@@ -24,7 +34,13 @@ class ContactData extends Component {
       name: createInputObject({ placeHolder: "Your Name" }),
       email: createInputObject({ placeHolder: "Your email" }),
       street: createInputObject({ placeHolder: "Your street" }),
-      zipCode: createInputObject({ placeHolder: "Your zipCode" }),
+      zipCode: createInputObject({
+        placeHolder: "Your zipCode",
+        rules: {
+          minLength: 5,
+          maxLength: 5,
+        },
+      }),
       country: createInputObject({ placeHolder: "Your country" }),
       deliveryMethod: createInputObject({
         placeHolder: "Your Delivery Method",
@@ -36,6 +52,7 @@ class ContactData extends Component {
         ],
       }),
     },
+    formIsValid: false,
     loading: false,
   };
 
@@ -43,11 +60,16 @@ class ContactData extends Component {
     e.preventDefault();
 
     this.setState({ loading: true });
+
+    const formData = {};
+    for (const orderFormKey in this.state.orderForm) {
+      formData[orderFormKey] = this.state.orderForm[orderFormKey].value;
+    }
     const order = {
       ingredients: this.props.ingredients,
       price: this.props.totalPrice,
+      orderData: formData,
     };
-
     try {
       await axios.post("orders.json", order);
       this.setState({ loading: false });
@@ -56,17 +78,46 @@ class ContactData extends Component {
       console.log("[error] purchaseContinueHandler", error);
     }
   };
+
+  checkValidity = (value, rules) => {
+    let isValid = true;
+    if (rules.required) {
+      isValid = value.trim() !== "" && isValid;
+    }
+    if (rules.minLength) {
+      isValid = value.length >= rules.minLength && isValid;
+    }
+    if (rules.maxLength) {
+      isValid = value.length <= rules.maxLength && isValid;
+    }
+    return isValid;
+  };
+
+  inputChangedHandler = (e, inputIdentifier) => {
+    const updateOrderForm = { ...this.state.orderForm };
+    const updatedFormELe = { ...updateOrderForm[inputIdentifier] };
+    updatedFormELe.value = e.target.value;
+    updatedFormELe.valid = this.checkValidity(
+      updatedFormELe.value,
+      updatedFormELe.validation,
+    );
+    updateOrderForm[inputIdentifier] = updatedFormELe;
+    let formIsValid = true;
+    for (const updatedOrderFormKey in updateOrderForm) {
+      formIsValid = updateOrderForm[updatedOrderFormKey].valid && formIsValid;
+    }
+    this.setState({ orderForm: updateOrderForm, formIsValid });
+  };
+
   render() {
     const formElementsArray = [];
+
     for (const [key, value] of Object.entries(this.state.orderForm)) {
-      console.log(value);
       formElementsArray.push({
         id: key,
         config: value,
       });
     }
-
-    console.log(formElementsArray);
 
     const inputs = formElementsArray.map((ele, i) => (
       <Input
@@ -74,13 +125,15 @@ class ContactData extends Component {
         elementType={ele.config.elementConfig.type}
         elementConfig={ele.config.elementConfig}
         value={ele.config.value}
+        invalid={ele.config.valid}
+        changed={(e) => this.inputChangedHandler(e, ele.id)}
       />
     ));
 
     const form = (
-      <form>
+      <form onSubmit={this.orederHandler}>
         {inputs}
-        <Button btnType="Success" clicked={this.orederHandler}>
+        <Button btnType="Success" disabled={!this.state.formIsValid}>
           ORDER
         </Button>
       </form>
