@@ -1,4 +1,6 @@
 import { Component } from "react";
+import { connect } from "react-redux";
+import * as actionTypes from "store/actions";
 import Aux from "hoc/Aux";
 import Burger from "components/Burger";
 import OrderSummary from "components/OrderSummary";
@@ -8,69 +10,15 @@ import axios from "plugins/axiosOrders";
 import Spinner from "components/UI/Spinner";
 import withErrorHandler from "hoc/withErrorHandler";
 
-const INGREDIENT_PRICES = {
-  salad: 0.4,
-  bacon: 0.7,
-  cheese: 1.2,
-  meat: 1,
-};
-
 class BurgerBulider extends Component {
   state = {
-    ingredients: null,
-    totalPrice: 0,
     purchasing: false,
     loading: false,
     error: null,
   };
 
-  async componentDidMount() {
-    try {
-      const ingredientsRes = await axios.get("/ingredients.json");
-      this.setState({ ingredients: ingredientsRes.data });
-    } catch (error) {
-      this.setState({ error: true });
-    }
-  }
-
-  addIngredientHandler = (type) => {
-    const oldCount = this.state.ingredients[type];
-    const ingredients = { ...this.state.ingredients };
-    ingredients[type] = oldCount + 1;
-    const priceAddttion = INGREDIENT_PRICES[type];
-    const totalPrice = this.state.totalPrice + priceAddttion;
-    this.setState({
-      totalPrice,
-      ingredients,
-    });
-  };
-
-  removeIngredientHandler = (type) => {
-    const oldCount = this.state.ingredients[type];
-    const ingredients = { ...this.state.ingredients };
-    ingredients[type] = oldCount - 1;
-    if (oldCount <= 0) return;
-    const priceDeduction = INGREDIENT_PRICES[type];
-    const totalPrice = this.state.totalPrice - priceDeduction;
-    this.setState({
-      totalPrice,
-      ingredients,
-    });
-  };
-
   purchaseContinueHandler = async () => {
-    const queryParams = [];
-    for (const i in this.state.ingredients) {
-      const key = encodeURIComponent(i);
-      const value = encodeURIComponent(this.state.ingredients[i]);
-      if (value) queryParams.push(`${key}=${value}`);
-    }
-    queryParams.push(`price=${this.state.totalPrice}`);
-    const queryString = `?${queryParams.join("&")}`;
-    this.props.history.push({
-      pathname: "/checkout",
-      search: queryString,
-    });
+    this.props.history.push("/checkout");
   };
 
   purchaseHandler = () => {
@@ -83,24 +31,24 @@ class BurgerBulider extends Component {
 
   render() {
     let purchaseAble, orderSummary, spinner, burger, controls, burgerBulider;
-    purchaseAble = this.state.totalPrice ? false : true;
+    purchaseAble = this.props.totalPrice ? false : true;
     spinner = <Spinner />;
 
-    if (this.state.ingredients) {
+    if (this.props.ings) {
       orderSummary = (
         <OrderSummary
-          price={this.state.totalPrice}
-          ingredients={this.state.ingredients}
+          price={this.props.totalPrice}
+          ingredients={this.props.ings}
           purchaseCanceled={this.purchaseHandler}
           purchaseContinued={this.purchaseContinueHandler}
         />
       );
-      burger = <Burger ingredients={this.state.ingredients} />;
+      burger = <Burger ingredients={this.props.ings} />;
       controls = (
         <Controls
-          price={this.state.totalPrice}
-          ingredientAdded={this.addIngredientHandler}
-          ingredientRemoved={this.removeIngredientHandler}
+          price={this.props.totalPrice}
+          ingredientAdded={this.props.onIngredientAdded}
+          ingredientRemoved={this.props.onIngredientRemoved}
           purchaseAble={purchaseAble}
           ordered={this.purchaseHandler}
         />
@@ -123,4 +71,25 @@ class BurgerBulider extends Component {
   }
 }
 
-export default withErrorHandler(BurgerBulider, axios);
+const mapStateToProps = (state) => {
+  return {
+    ings: state.ingredients,
+    totalPrice: state.totalPrice,
+  };
+};
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    onIngredientAdded: (ingredientName) =>
+      dispatch({ type: actionTypes.ADD_INGREDIENT, ingredientName }),
+    onIngredientRemoved: (ingredientName) =>
+      dispatch({ type: actionTypes.REMOVE_INGREDIENT, ingredientName }),
+  };
+};
+
+const burgerBuliderWithError = withErrorHandler(BurgerBulider, axios);
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(burgerBuliderWithError);
