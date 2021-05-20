@@ -5,6 +5,8 @@ import Spinner from "components/UI/Spinner";
 import classes from "./contactData.module.css";
 import axios from "plugins/axiosOrders";
 import Input from "components/UI/Input";
+import withErrorHandler from "hoc/withErrorHandler";
+import * as actions from "store/actions";
 
 const createInputObject = ({
   placeHolder,
@@ -54,13 +56,10 @@ class ContactData extends Component {
       }),
     },
     formIsValid: false,
-    loading: false,
   };
 
   orederHandler = async (e) => {
     e.preventDefault();
-
-    this.setState({ loading: true });
 
     const formData = {};
     for (const orderFormKey in this.state.orderForm) {
@@ -71,13 +70,7 @@ class ContactData extends Component {
       price: this.props.totalPrice,
       orderData: formData,
     };
-    try {
-      await axios.post("orders.json", order);
-      this.setState({ loading: false });
-      this.props.history.push("/");
-    } catch (error) {
-      console.log("[error] purchaseContinueHandler", error);
-    }
+    this.props.onOrderBurger(order);
   };
 
   checkValidity = (value, rules) => {
@@ -151,8 +144,19 @@ class ContactData extends Component {
 
 const mapStateToProps = (state) => {
   return {
-    ings: state.ings,
-    totalPrice: state.totalPrice,
+    ings: state.burgerBuilderReducer.ings,
+    totalPrice: state.burgerBuilderReducer.totalPrice,
+    loading: state.orderReducer.loading,
   };
 };
-export default connect(mapStateToProps)(ContactData);
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    onOrderBurger: (orderData) => dispatch(actions.purchaseBurger(orderData)),
+  };
+};
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(withErrorHandler(ContactData, axios));

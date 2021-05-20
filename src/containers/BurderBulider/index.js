@@ -1,6 +1,7 @@
 import { Component } from "react";
 import { connect } from "react-redux";
-import * as actionTypes from "store/actions";
+import * as burgerBuilderActions from "store/actions";
+
 import Aux from "hoc/Aux";
 import Burger from "components/Burger";
 import OrderSummary from "components/OrderSummary";
@@ -13,9 +14,11 @@ import withErrorHandler from "hoc/withErrorHandler";
 class BurgerBulider extends Component {
   state = {
     purchasing: false,
-    loading: false,
-    error: null,
   };
+
+  componentDidMount() {
+    this.props.onInitIngredients();
+  }
 
   purchaseContinueHandler = async () => {
     this.props.history.push("/checkout");
@@ -63,7 +66,7 @@ class BurgerBulider extends Component {
     return (
       <Aux>
         <Modal show={this.state.purchasing} modalClosed={this.purchaseHandler}>
-          {this.state.loading ? spinner : orderSummary}
+          {orderSummary}
         </Modal>
         {burgerBulider || spinner}
       </Aux>
@@ -73,17 +76,19 @@ class BurgerBulider extends Component {
 
 const mapStateToProps = (state) => {
   return {
-    ings: state.ingredients,
-    totalPrice: state.totalPrice,
+    ings: state.burgerBuilderReducer.ingredients,
+    totalPrice: state.burgerBuilderReducer.totalPrice,
+    error: state.burgerBuilderReducer.error,
   };
 };
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    onIngredientAdded: (ingredientName) =>
-      dispatch({ type: actionTypes.ADD_INGREDIENT, ingredientName }),
-    onIngredientRemoved: (ingredientName) =>
-      dispatch({ type: actionTypes.REMOVE_INGREDIENT, ingredientName }),
+    onIngredientAdded: (name) =>
+      dispatch(burgerBuilderActions.addIngredient(name)),
+    onIngredientRemoved: (name) =>
+      dispatch(burgerBuilderActions.removeIngredient(name)),
+    onInitIngredients: () => dispatch(burgerBuilderActions.initIngredients()),
   };
 };
 
