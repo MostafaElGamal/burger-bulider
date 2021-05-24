@@ -13,40 +13,54 @@ const INGREDIENT_PRICES = {
   meat: 1,
 };
 
+const addIngredient = (state, newState, action) => {
+  const ingredientName = action.ingredientName;
+
+  newState.ingredients = {
+    ...newState.ingredients,
+    [ingredientName]: state.ingredients[ingredientName] + 1,
+  };
+  newState.totalPrice = state.totalPrice + INGREDIENT_PRICES[ingredientName];
+  return newState;
+};
+
+const removeIngredient = (state, newState, action) => {
+  const ingredientName = action.ingredientName;
+  newState.ingredients = {
+    ...newState.ingredients,
+    [ingredientName]: state.ingredients[ingredientName] - 1,
+  };
+  newState.totalPrice = state.totalPrice - INGREDIENT_PRICES[ingredientName];
+  return newState;
+};
+
+const setIngredients = (newState, action) => {
+  newState.ingredients = action.ingredients;
+  newState.totalPrice = 0;
+  newState.error = false;
+  return newState;
+};
+
 const reducer = (state = intialState, action) => {
   const newState = { ...state };
-  const ingredientName = action.ingredientName;
 
   switch (action.type) {
     case actionTypes.ADD_INGREDIENT:
-      newState.ingredients = {
-        ...newState.ingredients,
-        [ingredientName]: state.ingredients[ingredientName] + 1,
-      };
-      newState.totalPrice =
-        state.totalPrice + INGREDIENT_PRICES[ingredientName];
-      break;
+      return addIngredient(state, newState, action);
+
     case actionTypes.REMOVE_INGREDIENT:
-      newState.ingredients = {
-        ...newState.ingredients,
-        [ingredientName]: state.ingredients[ingredientName] - 1,
-      };
-      newState.totalPrice =
-        state.totalPrice - INGREDIENT_PRICES[ingredientName];
-      break;
+      return removeIngredient(state, newState, action);
 
     case actionTypes.SET_INGREDIENTS:
-      newState.ingredients = action.ingredients;
-      newState.error = false;
-      break;
+      return setIngredients(state, action);
 
     case actionTypes.FETCH_INGREDIENTS_FAILD:
       newState.error = true;
-      break;
+      return newState;
+
     default:
-      break;
+      return newState;
   }
-  return newState;
 };
 
 export default reducer;
